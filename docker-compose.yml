@@ -29,6 +29,11 @@ services:
 
   backend:
     image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-zaylora}/video-canvas-backend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        VERSION: ${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       APP_SERVER_MODE: release
@@ -124,6 +129,9 @@ services:
 
   web:
     image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-zaylora}/video-canvas-web:${IMAGE_TAG:-latest}
+    build:
+      context: ./web
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-38080}:80"
@@ -140,6 +148,9 @@ services:
   # 改过 backend 的密钥才需要在 .env 里设 AGENT_ID_KEY）。不一致时 agent 启动后自检会发现，/health 报不健康。
   agent:
     image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-zaylora}/video-canvas-agent:${IMAGE_TAG:-latest}
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
     logging: *default-logging
     restart: unless-stopped
     environment:
