@@ -8,6 +8,22 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>连镜</title>
+    <script>
+      // 通过局域网 IP + http 访问时不是安全上下文，crypto.randomUUID 不存在，这里补一个 v4 实现
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID !== "function") {
+        Object.defineProperty(crypto, "randomUUID", {
+          configurable: true,
+          value: function () {
+            var b = crypto.getRandomValues(new Uint8Array(16));
+            b[6] = (b[6] & 0x0f) | 0x40;
+            b[8] = (b[8] & 0x3f) | 0x80;
+            var h = "";
+            for (var i = 0; i < 16; i++) h += ("0" + b[i].toString(16)).slice(-2);
+            return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+          }
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
