@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -73,6 +74,23 @@ var blockedNets = mustCIDRs(
 	"100::/64",        // 丢弃专用前缀
 	"fec0::/10",       // 站点本地地址（已废弃的 IPv6 私网段，net.IP.IsPrivate 不覆盖）
 )
+
+// allowPrivateOutbound 由环境变量显式开启，供自托管部署访问本机 / 内网服务（例如本机的 ComfyUI）。
+func allowPrivateOutbound() bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("APP_AI_ALLOW_PRIVATE_OUTBOUND"))) {
+	case "1", "true", "yes":
+		return true
+	}
+	return false
+}
+
+// defaultIPAllowed 是默认出站策略：拒绝内网 / 回环 / 链路本地；显式设置 APP_AI_ALLOW_PRIVATE_OUTBOUND 时全部放行。
+func defaultIPAllowed(ip net.IP) bool {
+	if allowPrivateOutbound() {
+		return true
+	}
+	return !IsBlockedIP(ip)
+}
 
 func mustCIDRs(list ...string) []*net.IPNet {
 	out := make([]*net.IPNet, 0, len(list))
@@ -180,7 +198,7 @@ type Config struct {
 // ApplyDefaults 补默认值：IP 校验默认拒绝内网 / 回环 / 链路本地，DNS 用系统解析，拨号超时 10 秒，最多重定向 3 次。
 func (c *Config) ApplyDefaults() {
 	if c.IPAllowed == nil {
-		c.IPAllowed = func(ip net.IP) bool { return !IsBlockedIP(ip) }
+		c.IPAllowed = defaultIPAllowed
 	}
 	if c.Resolver == nil {
 		c.Resolver = netResolver{}
