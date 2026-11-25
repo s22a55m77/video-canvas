@@ -39,6 +39,8 @@ services:
       APP_REDIS_ADDR: redis:6379
       APP_JWT_SECRET: ${APP_JWT_SECRET:?APP_JWT_SECRET is required}
       APP_AI_SECRET_KEY: ${APP_AI_SECRET_KEY:?APP_AI_SECRET_KEY is required}
+      # 自托管补丁：允许渠道访问本机 / 内网地址（默认关闭）
+      APP_AI_ALLOW_PRIVATE_OUTBOUND: ${APP_AI_ALLOW_PRIVATE_OUTBOUND:-false}
       APP_AI_PLUGIN_RUNNER_MODE: external
       APP_AI_PLUGIN_RUNNER_NETWORK: unix
       APP_AI_PLUGIN_RUNNER_ADDRESS: /run/plugin-runner/runner.sock
